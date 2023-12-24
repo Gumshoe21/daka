@@ -43,6 +43,39 @@ def _version_callback(value: bool) -> None:
         typer.echo(f"{__app_name__} v{__version__}")
         raise typer.Exit()
 
+@app.command()
+def add(mode: str = typer.Argument(default="countdown"), name: str = typer.Argument(), duration: int = typer.Argument()):
+    daka = get_daka()
+    timer, error = daka.add(mode, name, duration)
+    if error:
+        typer.secho(
+            f'Adding timer failed with "{ERRORS[error]}"', fg=typer.colors.RED
+        )
+        raise typer.Exit(1)
+    else:
+        typer.secho(
+            f"""daka: timer "{timer['name']}" - {timer['mode']} - {timer['duration']}" was added """,
+            fg=typer.colors.GREEN,
+        )
+
+def get_daka() -> daka.Daka:
+    if config.CONFIG_FILE_PATH.exists():
+        db_path = database.get_database_path(config.CONFIG_FILE_PATH)
+    else:
+        typer.secho(
+            'Config file not found. Please, run "daka init"',
+            fg=typer.colors.RED,
+        )
+        raise typer.Exit(1)
+    if db_path.exists():
+        return daka.Daka(db_path)
+    else:
+        typer.secho(
+            'Database not found. Please, run "rptodo init"',
+            fg=typer.colors.RED,
+        )
+        raise typer.Exit(1)
+
 @app.callback()
 def main(
     version: Optional[bool] = typer.Option(

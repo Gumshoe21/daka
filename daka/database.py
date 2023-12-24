@@ -2,21 +2,24 @@
 
 import configparser
 from pathlib import Path
+from typing import Dict, Union, List, NamedTuple
+import json
 
 from daka import DB_WRITE_ERROR, SUCCESS
 
 DEFAULT_DB_DIR_PATH = Path.home().joinpath('.config/daka')
-DEFAULT_DB_FILE_PATH = DEFAULT_DB_DIR_PATH / "config.ini"
+DEFAULT_DB_FILE_PATH = DEFAULT_DB_DIR_PATH / "db.json"
 
 def get_database_path(config_file: Path) -> Path:
-    """Return the current path to the to-do database."""
+    """Return the current path to the Daka database."""
     config_parser = configparser.ConfigParser()
     config_parser.read(config_file)
     return Path(config_parser["General"]["database"])
 
+# TODO def set_database_path
 
 def init_database(db_path: Path) -> int:
-    """Create the to-do database."""
+    """Create the Daka database."""
     try:
         db_path.write_text("[]")  # Empty to-do list
         return SUCCESS
@@ -24,14 +27,14 @@ def init_database(db_path: Path) -> int:
         return DB_WRITE_ERROR
     
 class DBResponse(NamedTuple):
-    timer_list: List[Dict[str, Any]]
+    timer_list: List[Dict[str, Union[str, int]]]
     error: int
 
 class DatabaseHandler:
     def __init__(self, db_path: Path) -> None:
         self._db_path = db_path
 
-    def read_todos(self) -> DBResponse:
+    def read_timers(self) -> DBResponse:
         try:
             with self._db_path.open("r") as db:
                 try:
@@ -41,10 +44,10 @@ class DatabaseHandler:
         except OSError:  # Catch file IO problems
             return DBResponse([], DB_READ_ERROR)
 
-    def write_todos(self, timer_list: List[Dict[str, Any]]) -> DBResponse:
+    def write_timers(self, timer_list: List[Dict[str, Union[str, int]]]) -> DBResponse:
         try:
             with self._db_path.open("w") as db:
-                json.dump(todo_list, db, indent=4)
-            return DBResponse(todo_list, SUCCESS)
+                json.dump(timer_list, db, indent=4)
+            return DBResponse(timer_list, SUCCESS)
         except OSError:  # Catch file IO problems
-            return DBResponse(todo_list, DB_WRITE_ERROR)
+            return DBResponse(timer_list, DB_WRITE_ERROR)
