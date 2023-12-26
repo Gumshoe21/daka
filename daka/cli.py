@@ -43,10 +43,37 @@ def _version_callback(value: bool) -> None:
         typer.echo(f"{__app_name__} v{__version__}")
         raise typer.Exit()
 
+# @app.command()
+# def add(mode: str = typer.Argument(default="countdown"), name: str = typer.Argument(), duration: int = typer.Argument()):
+#     daka = get_daka()
+#     timer, error = daka.add(mode, name, duration)
+#     if error:
+#         typer.secho(
+#             f'Adding timer failed with "{ERRORS[error]}"', fg=typer.colors.RED
+#         )
+#         raise typer.Exit(1)
+#     else:
+#         typer.secho(
+#             f"""daka: timer "{timer['name']}" - {timer['mode']} - {timer['duration']}" was added """,
+#             fg=typer.colors.GREEN,
+#         )
+
+def mode_callback(value: str):
+    if str(value) not in ["1","2","3"]:
+        raise typer.BadParameter("Invalid input: please choose 1, 2, or 3.")
+    else: 
+        return value
+
 @app.command()
-def add(mode: str = typer.Argument(default="countdown"), name: str = typer.Argument(), duration: int = typer.Argument()):
+def add(mode: str = typer.Option(prompt="Please choose a mode: 1 for countdown, 2 for stopwatch, 3 for pomodoro", callback=mode_callback), name: str = typer.Argument(), duration: int = typer.Argument()):
     daka = get_daka()
-    timer, error = daka.add(mode, name, duration)
+
+    modes = {
+        "1": "countdown",
+        "2": "stopwatch",
+        "3": "pomodoro"
+    }
+    timer, error = daka.add(modes[mode], name, duration)
     if error:
         typer.secho(
             f'Adding timer failed with "{ERRORS[error]}"', fg=typer.colors.RED
@@ -57,6 +84,7 @@ def add(mode: str = typer.Argument(default="countdown"), name: str = typer.Argum
             f"""daka: timer "{timer['name']}" - {timer['mode']} - {timer['duration']}" was added """,
             fg=typer.colors.GREEN,
         )
+
 
 def get_daka() -> daka.Daka:
     if config.CONFIG_FILE_PATH.exists():
