@@ -4,13 +4,35 @@ from pathlib import Path
 from typing import Optional
 
 import typer
+import json
 
-from daka import (
-    ERRORS, __app_name__, __version__, config, database, daka
-)
+from daka import timer, ERRORS, __app_name__, __version__, config, database, daka
+
 app = typer.Typer()
 
-# TODO fix default db path
+# Retrieves the Daka object for use in commands
+
+
+def get_daka() -> daka.Daka:
+    if config.CONFIG_FILE_PATH.exists():
+        db_path = database.get_database_path(config.CONFIG_FILE_PATH)
+    else:
+        typer.secho(
+            'Config file not found. Please, run "daka init"',
+            fg=typer.colors.RED,
+        )
+        raise typer.Exit(1)
+    if db_path.exists():
+        return daka.Daka(db_path)
+    else:
+        typer.secho(
+            'Database not found. Please, run "rptodo init"',
+            fg=typer.colors.RED,
+        )
+        raise typer.Exit(1)
+
+
+# init
 @app.command()
 def init(
     db_path: str = typer.Option(
@@ -38,43 +60,66 @@ def init(
     else:
         typer.secho(f"The Daka database is {db_path}", fg=typer.colors.GREEN)
 
+
+# add
+def mode_callback(value: str):
+    if str(value) not in ["1", "2", "3"]:
+        raise typer.BadParameter("Invalid input: please choose 1, 2, or 3.")
+    else:
+        return value
+
+
+@app.command()
+def add(
+    mode: str = typer.Option(
+        prompt="Please choose a mode: \n1 for countdown, \n2 for stopwatch, \n3 for pomodoro\nYour choice",
+        callback=mode_callback,
+    ),
+    name: str = typer.Argument(),
+    duration: int = typer.Argument(),
+):
+    daka = get_daka()
+
+    modes = {"1": "countdown", "2": "stopwatch", "3": "pomodoro"}
+    timer, error = daka.add(modes[mode], name, duration)
+    if error:
+        typer.secho(f'Adding timer faciled with "{ERRORS[error]}"', fg=typer.colors.RED)
+        raise typer.Exit(1)
+    else:
+        typer.secho(
+            f"You've added a new timer:\nName: {timer['name']}\nMode: {timer['mode']}\nDuration: {timer['duration']} was added ",
+            fg=typer.colors.GREEN,
+        )
+
+
+# run
+@app.command()
+def run(name: str) -> None:
+    t = timer.Stopwatch("my timer", 60)
+    t.start()
+    daka = get_daka()
+
+
+# list
+@app.command()
+def list():
+    daka = get_daka()
+    for t in daka.list():
+        # for k, v in t.items():
+        #    print(f"{k.capitalize()}:{v}")
+        print(f"{t['name']}")
+
+
+# TODO add list by mode
+# TODO add list by duration threshold
+
+
+# main
 def _version_callback(value: bool) -> None:
     if value:
         typer.echo(f"{__app_name__} v{__version__}")
         raise typer.Exit()
 
-@app.command()
-def add(mode: str = typer.Argument(default="countdown"), name: str = typer.Argument(), duration: int = typer.Argument()):
-    daka = get_daka()
-    timer, error = daka.add(mode, name, duration)
-    if error:
-        typer.secho(
-            f'Adding timer failed with "{ERRORS[error]}"', fg=typer.colors.RED
-        )
-        raise typer.Exit(1)
-    else:
-        typer.secho(
-            f"""daka: timer "{timer['name']}" - {timer['mode']} - {timer['duration']}" was added """,
-            fg=typer.colors.GREEN,
-        )
-
-def get_daka() -> daka.Daka:
-    if config.CONFIG_FILE_PATH.exists():
-        db_path = database.get_database_path(config.CONFIG_FILE_PATH)
-    else:
-        typer.secho(
-            'Config file not found. Please, run "daka init"',
-            fg=typer.colors.RED,
-        )
-        raise typer.Exit(1)
-    if db_path.exists():
-        return daka.Daka(db_path)
-    else:
-        typer.secho(
-            'Database not found. Please, run "rptodo init"',
-            fg=typer.colors.RED,
-        )
-        raise typer.Exit(1)
 
 @app.callback()
 def main(
