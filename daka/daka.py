@@ -9,11 +9,6 @@ class CurrentTimer(NamedTuple):
     metadata: Dict[str, Union[str, int]]
     error: int
 
-class Timer:
-	def __init__(self, name: str, mode: str, duration: int) -> None:
-		self.name = name
-		self.mode = mode
-		self.duration = duration
 
 class Daka:
     def __init__(self, db_path: Path) -> None:
