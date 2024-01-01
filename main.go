@@ -24,7 +24,7 @@ func initialModel() model {
 		cursor: 0,
 		active: "Stop",
 		selected: make(map[int]string),
-		timer: stopwatch.NewWithInterval(time.Millisecond),
+		timer: stopwatch.NewWithInterval(time.Second),
 	}
 }
 
@@ -48,13 +48,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				return m, m.timer.Toggle()
 			case "Reset":
-				return m, m.timer.Reset()
+				return m, tea.Sequence(m.timer.Stop(), m.timer.Reset())
+				
 			}
 		case "up", "k":
 			if m.cursor > 0 {
 				m.cursor--
 			}
-		// The "down" and "j" keys move the cursor down
 		case "down", "j":
 			if m.cursor < len(m.controls)-1 {
 				m.cursor++
