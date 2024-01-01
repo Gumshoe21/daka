@@ -12,7 +12,7 @@ import (
 
 type model struct {
 	cursor int
-	timer stopwatch.Model
+	stopwatch stopwatch.Model
 	active string
 	controls []string
 	selected map[int]string
@@ -24,12 +24,12 @@ func initialModel() model {
 		cursor: 0,
 		active: "Stop",
 		selected: make(map[int]string),
-		timer: stopwatch.NewWithInterval(time.Second),
+		stopwatch: stopwatch.NewWithInterval(time.Second),
 	}
 }
 
 func (m model) Init() tea.Cmd {
-	return m.timer.Init() 
+	return m.stopwatch.Init() 
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -41,14 +41,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "enter", " ":
 			switch m.controls[m.cursor] {
 			case "Toggle":
-				if m.timer.Running() {
+				if m.stopwatch.Running() {
 					m.active = "Start";
 				} else {
 					m.active = "Stop";
 				}
-				return m, m.timer.Toggle()
+				return m, m.stopwatch.Toggle()
 			case "Reset":
-				return m, tea.Sequence(m.timer.Stop(), m.timer.Reset())
+				return m, tea.Sequence(m.stopwatch.Stop(), m.stopwatch.Reset())
 				
 			}
 		case "up", "k":
@@ -63,12 +63,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	
 	}
 	var cmd tea.Cmd
-	m.timer, cmd = m.timer.Update(msg)
+	m.stopwatch, cmd = m.stopwatch.Update(msg)
 	return m, cmd
 }
 
 func (m model) View() string {
-	s := "Your timer:\n\n"
+	s := "Your stopwatch:\n\n"
 
 	for i, control := range m.controls {
 
@@ -79,7 +79,7 @@ func (m model) View() string {
 
 		s += fmt.Sprintf("%s %s\n", cursor, control)
 	}
-	s += "\n" + m.timer.View() + "\n"
+	s += "\n" + m.stopwatch.View() + "\n"
 
 	return s
 }
