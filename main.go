@@ -13,7 +13,7 @@ import (
 
 type model struct {
 	cursor int
-	timer stopwatch.Model
+	stopwatch stopwatch.Model
 	controls []string
 	actions []string
 	selected map[int]string
@@ -35,12 +35,12 @@ func initialModel() model {
 		actions: []string{"Stop","Reset"},
 		cursor: 0,
 		selected: make(map[int]string),
-		timer: stopwatch.NewWithInterval(time.Millisecond),
+		stopwatch: stopwatch.NewWithInterval(time.Millisecond),
 	}
 }
 
 func (m model) Init() tea.Cmd {
-	return m.timer.Init() 
+	return m.stopwatch.Init() 
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -52,14 +52,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "enter", " ":
 			switch m.controls[m.cursor] {
 			case "Toggle":
-				if m.timer.Running() {
+				if m.stopwatch.Running() {
 					m.actions[0] = "Start"
 				} else {
 					m.actions[0] = "Stop"
 				}
-				return m, m.timer.Toggle()
+				return m, m.stopwatch.Toggle()
 			case "Reset":
-				return m, tea.Sequence(m.timer.Stop(), m.timer.Reset())
+				return m, tea.Sequence(m.stopwatch.Stop(), m.stopwatch.Reset())
 				
 			}
 		case "up", "k":
@@ -74,7 +74,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	
 	}
 	var cmd tea.Cmd
-	m.timer, cmd = m.timer.Update(msg)
+	m.stopwatch, cmd = m.stopwatch.Update(msg)
 	return m, cmd
 }
 
@@ -93,7 +93,7 @@ func (m model) View() string {
 	}
 
 	s += "\n" 
-	s += lipgloss.PlaceHorizontal(20, lipgloss.Center, time.Duration.String((m.timer.Elapsed())),lipgloss.WithWhitespaceBackground(lipgloss.Color("29")))
+	s += lipgloss.PlaceHorizontal(20, lipgloss.Center, time.Duration.String((m.stopwatch.Elapsed())),lipgloss.WithWhitespaceBackground(lipgloss.Color("29")))
 
 
 	return modelStyle.Render(s)
