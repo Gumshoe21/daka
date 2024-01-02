@@ -7,29 +7,40 @@ import (
 
 	stopwatch "github.com/charmbracelet/bubbles/stopwatch"
 	tea "github.com/charmbracelet/bubbletea"
+	lipgloss "github.com/charmbracelet/lipgloss"
 )
 
 
 type model struct {
 	cursor int
-	stopwatch stopwatch.Model
-	active string
+	timer stopwatch.Model
 	controls []string
+	actions []string
 	selected map[int]string
 }
+
+var modelStyle = lipgloss.NewStyle().
+					Width(50).
+					Height(5).
+					Align(lipgloss.Center, lipgloss.Center).
+					BorderStyle(lipgloss.NormalBorder()).
+					// Foreground(lipgloss.Color("229")).
+					Background(lipgloss.Color("#3C3C32")).
+					BorderForeground(lipgloss.Color("9"))
+
 
 func initialModel() model {
 	return model {
 		controls: []string{"Toggle","Reset"},
+		actions: []string{"Stop","Reset"},
 		cursor: 0,
-		active: "Stop",
 		selected: make(map[int]string),
-		stopwatch: stopwatch.NewWithInterval(time.Second),
+		timer: stopwatch.NewWithInterval(time.Millisecond),
 	}
 }
 
 func (m model) Init() tea.Cmd {
-	return m.stopwatch.Init() 
+	return m.timer.Init() 
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -41,14 +52,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "enter", " ":
 			switch m.controls[m.cursor] {
 			case "Toggle":
-				if m.stopwatch.Running() {
-					m.active = "Start";
+				if m.timer.Running() {
+					m.actions[0] = "Start"
 				} else {
-					m.active = "Stop";
+					m.actions[0] = "Stop"
 				}
-				return m, m.stopwatch.Toggle()
+				return m, m.timer.Toggle()
 			case "Reset":
-				return m, tea.Sequence(m.stopwatch.Stop(), m.stopwatch.Reset())
+				return m, tea.Sequence(m.timer.Stop(), m.timer.Reset())
 				
 			}
 		case "up", "k":
@@ -63,14 +74,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	
 	}
 	var cmd tea.Cmd
-	m.stopwatch, cmd = m.stopwatch.Update(msg)
+	m.timer, cmd = m.timer.Update(msg)
 	return m, cmd
 }
 
 func (m model) View() string {
-	s := "Your stopwatch:\n\n"
+	s := "Stopwatch:\n\n"
 
-	for i, control := range m.controls {
+
+	for i, control := range m.actions{
 
 	cursor := " "
 		if m.cursor == i {
@@ -79,9 +91,13 @@ func (m model) View() string {
 
 		s += fmt.Sprintf("%s %s\n", cursor, control)
 	}
-	s += "\n" + m.stopwatch.View() + "\n"
 
-	return s
+	s += "\n" 
+	s += lipgloss.PlaceHorizontal(20, lipgloss.Center, time.Duration.String((m.timer.Elapsed())),lipgloss.WithWhitespaceBackground(lipgloss.Color("29")))
+
+
+	return modelStyle.Render(s)
+
 }
 
 func main() {
