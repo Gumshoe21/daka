@@ -1,0 +1,44 @@
+[
+    {
+        "name": "Pomodoro Timer",
+        "countdown": 0,
+        "shortBreak": 5,
+        "longBreak": 15
+    },
+    {
+        "name": "Study Session",
+        "countdown": 0,
+        "shortBreak": 10,
+        "longBreak": 30
+    },
+    {
+        "name": "Work Sprint",
+        "countdown": 0,
+        "shortBreak": 5,
+        "longBreak": 20
+    },
+    {
+        "name": "Custom Timer",
+        "countdown": 0,
+        "shortBreak": 7,
+        "longBreak": 25
+    },
+    {
+        "name": "New Timer",
+        "countdown": 40,
+        "shortBreak": 8,
+        "longBreak": 20
+    },
+    {
+        "name": "New Timer",
+        "countdown": 40,
+        "shortBreak": 8,
+        "longBreak": 20
+    },
+    {
+        "name": "New Timer",
+        "countdown": 40,
+        "shortBreak": 8,
+        "longBreak": 20
+    }
+]
